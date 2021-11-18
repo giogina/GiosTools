@@ -1,2 +1,3 @@
 #README
-To install, copy the GiosTools.mpl file into the library folder of your maple installation, or link maple to it.
+To install, copy the GiosTools.mpl file into the library folder of your maple installation.
+See Manual.pdf for detailed installation instructions as well as an explanation of the functionalities.
