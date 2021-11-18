@@ -8,7 +8,7 @@ savelibname := "./GiosTools.mla":
 GiosTools := module()
   description "Some procedures dealing with recursions, power series, and variables suitable for Helium.":
   option package:
-  export getTeX,trimpoch,trimfac,trimpochfac,`&>`,showcoord,L,HH,Dchange,Collect,invertpolynomial,compare,gsimplify,gchange,gsplit,ratplot,IdSeq,IdSer,multiangle,RecRel,expandsqrta,combinesqrta,Expand,summap,symplify,VOP,VOP0,SERR,opm2,opm1,op0,op1,op2,posfactor,combinepowers,assumecoords,assumeinds,app2seq,getseq,setseq,resetseq,nextcoeff:
+  export getTeX,trimpoch,trimfac,trimpochfac,`&>`,showcoord,L,HH,Dchange,Collect,invertpolynomial,compare,gsimplify,gchange,gsplit,ratplot,IdSeq,IdSer,multiangle,RecRel,expandsqrta,combinesqrta,Expand,summap,symplify,DoubleSum,VOP,VOP0,SERR,Psi0,Psi1,Psi2,opm2,opm1,op0,op1,op2,posfactor,combinepowers,assumecoords,assumeinds,app2seq,getseq,setseq,resetseq,nextcoeff:
   local ElementaryConversions,Maple2TeX,coordtools,gFktCoeffs,ModuleLoad,getser,invertpolytools,IdSeqMod,hypconvert,getshifts,hyper2sum,RecRelinner,binomexpand:
 
   ModuleLoad:=proc()
@@ -1920,6 +1920,32 @@ GiosTools := module()
     VOP :=proc(cc:=ri) return eval(map(simplify,eval(-Z/r1-Z/r2+Y/r12,ri&>cc)),[1/sqrt(2+2*a)=1/sqrt(1+a)/sqrt(2),1/sqrt(2-2*a)=1/sqrt(1-a)/sqrt(2)]); end proc:
     VOP0:=proc(cc:=ri) return eval(map(simplify,eval(-Z/r1-Z/r2+0/r12,ri&>cc)),[1/sqrt(2+2*a)=1/sqrt(1+a)/sqrt(2),1/sqrt(2-2*a)=1/sqrt(1-a)/sqrt(2)]); end proc:
     SERR:=T(Psi[n])=-V*Psi[n-1]+E*Psi[n-2];
+    
+    Psi0:=1:
+    Psi1:=eval(-Z*(r1+r2)+r12/2,&>rad);
+    Psi2:=(1/12-E/6+Z^2/3)*r^2+Z^2/2*r^2*sqrt(1-a^2)
+    -Z/3*r^2*doublesum((k+2)*GAMMA(2*n+k/2-1)/4/n!/GAMMA(n+k/2+1)*(a/2)^(2*n)*(-d/sqrt(2))^k,n=0..infinity,k=0..infinity,{[0,0],[0,2]})
+    -Z/3*r^2*(1-d^2)*ln(r)+Z/4*r^2
+    +Z/3*r^2*doublesum(GAMMA(2*n+k/2-1)/GAMMA(n+1/2)/GAMMA(n+k/2+1/2)*(a/2)^(2*n)*(-d/sqrt(2))^k,n=0..infinity,k=0..infinity,{[0,0],[0,2],[n,1]})
+    +Z/3*2/Pi*r^2*(1-d^2)*ln(r)-Z/3/Pi*2*r^2+C*r^2*(1-d^2);
+    
+    DoubleSum:=proc(term,range2,range1,without:={}) # without: {[0,2]} signifies index2=0,index1=2 excluded from summation.
+      local i1, i2, index1:=lhs(range1), index2:=lhs(range2), res:=0;
+        for i1 from op1(rhs(range1)) to max(map(op2,without) minus indets(without,name)) do
+          if not [index2,i1] in without then 
+            for i2 from op1(rhs(range2)) to max(map(op1,map(zz->`if`(zz[2] in {i1,index1},zz,NULL),without)) minus indets(without,name)) do
+              if (not [i2,i1] in without) and (not [i2,index1] in without) then res := res + eval(term,[index1=i1,index2=i2]); end if;
+            end do:
+            res := res + Sum(eval(term,index1=i1),index2=i2..op2(rhs(range2)));
+          end if:
+        end do:
+        for i2 from op1(rhs(range2)) to max(map(op1,map(zz->`if`(zz[2] = index1,zz,NULL),without)) minus indets(without,name)) do
+          if not [i2,index1] in without then res := res + Sum(eval(term,index2=i2),index1=i1..op2(rhs(range1))); end if;
+        end do:
+        res := res + Sum(Sum(eval(term),index2=i2..op2(rhs(range2))),index1=i1..op2(rhs(range1)));
+    end proc:
+
+
 
     ####################################################################################
     ####################################################################################
